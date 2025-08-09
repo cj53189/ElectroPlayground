@@ -2,397 +2,904 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>Monstersmith: Pocket Brawl (MVP)</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    @font-face {
-      font-family: 'PressStart2P';
-      src: local('Press Start 2P'), local('PressStart2P');
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ElectroPlayground — Learn Electronics by Playing</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <div id="hud">
-      <div class="title">Monstersmith: Pocket Brawl</div>
-      <div id="instructions">Tap a move. Win by dropping the enemy HP to zero.</div>
+  <header class="site-header">
+    <h1>⚡ ElectroPlayground</h1>
+    <p>Build, tweak, and troubleshoot safe virtual circuits. Made for curious minds.</p>
+    <div class="header-tools">
+      <div class="badges-strip" id="badgesStrip"></div>
+      <label class="teen-toggle"><input id="teenMode" type="checkbox"> Teen Mode</label>
+      <div class="xp">XP: <strong id="xpVal">0</strong></div>
     </div>
-    <canvas id="game"></canvas>
-    <div id="controls"></div>
-  </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs">
+      <button class="tab active" data-tab="builder">1) Build & Blink</button>
+      <button class="tab" data-tab="sensor">2) Sensor Lab</button>
+      <button class="tab" data-tab="mystery">3) Mystery Fix</button>
+<button class="tab" data-tab="logic">4) Logic Lab</button>
+<button class="tab" data-tab="pwm">5) PWM Playground</button>
+<button class="tab" data-tab="challenges">6) Challenges & Badges</button>
+    </nav>
+
+    <!-- TAB 1: Simple circuit builder -->
+    <section class="panel active" id="builder">
+      <h2>Build & Blink</h2>
+      <p class="sub">Connect a battery → resistor → LED → back to battery. Close the switch, then tweak the resistor to keep the LED safe.</p>
+
+      <div class="grid two-col">
+        <div>
+          <div class="node-list">
+            <div class="node" data-node="BAT+">🔺 BAT +</div>
+            <div class="node" data-node="BAT-">🔻 BAT −</div>
+            <div class="node" data-node="SW_OUT">⏻ Switch OUT</div>
+            <div class="node" data-node="R_OUT">Resistor OUT</div>
+            <div class="node" data-node="LED_A">LED Anode (+)</div>
+            <div class="node" data-node="LED_C">LED Cathode (−)</div>
+          </div>
+
+          <div class="wiring">
+            <div class="wire">
+              <label>Wire 1:</label>
+              <select class="endA"></select> →
+              <select class="endB"></select>
+            </div>
+            <div class="wire">
+              <label>Wire 2:</label>
+              <select class="endA"></select> →
+              <select class="endB"></select>
+            </div>
+            <div class="wire">
+              <label>Wire 3:</label>
+              <select class="endA"></select> →
+              <select class="endB"></select>
+            </div>
+            <div class="wire">
+              <label>Wire 4:</label>
+              <select class="endA"></select> →
+              <select class="endB"></select>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="ctrl">
+              <label for="batteryV">Battery: <span id="batteryVLabel">3.0</span> V</label>
+              <input id="batteryV" type="range" min="1.5" max="9" step="0.5" value="3" />
+            </div>
+            <div class="ctrl">
+              <label for="resistance">Resistor: <span id="resLabel">330</span> Ω</label>
+              <input id="resistance" type="range" min="10" max="2200" step="10" value="330" />
+            </div>
+            <div class="ctrl switch">
+              <label class="switch-label">
+                <input id="switchClosed" type="checkbox" />
+                <span>Switch Closed</span>
+              </label>
+            </div>
+            <div class="ctrl">
+              <label for="ledVf">LED Forward Voltage: <span id="vfLabel">2.0</span> V</label>
+              <input id="ledVf" type="range" min="1.6" max="3.2" step="0.1" value="2.0" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="preview">
+            <div class="led" id="ledViz"></div>
+            <div class="gauge">
+              <div class="gauge-needle" id="ammeter"></div>
+            </div>
+          </div>
+
+          <div class="readout" id="readout">
+            <div>Current: <strong id="current">0.00</strong> mA</div>
+            <div>Power (LED+R): <strong id="power">0.00</strong> mW</div>
+            <div class="adv hidden">
+              <div>V<sub>R</sub>: <strong id="vR">0.00</strong> V &nbsp; | &nbsp; V<sub>LED</sub>: <strong id="vLED">0.00</strong> V</div>
+              <div>Resistor power: <strong id="pR">0.00</strong> mW</div>
+              <div class="eqn">I = (V<sub>batt</sub> − V<sub>f</sub>) / R</div>
+            </div>
+            <div>Status: <strong id="status">Open circuit</strong></div>
+            <details>
+              <summary>What’s happening?</summary>
+              <p>This models a simple series circuit. If the switch is closed and wiring creates a loop from BAT+ → resistor → LED (anode to cathode) → BAT−, current flows.</p>
+              <p>We estimate current using: <code>I = (Vbatt − Vf) / R</code> when the LED is forward biased and the switch is closed. If I &gt; 25 mA, that’s too spicy for most 5&nbsp;mm LEDs.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Sensor lab -->
+    <section class="panel" id="sensor">
+      <h2>Sensor Lab (Dark Alarm)</h2>
+      <p class="sub">Simulate a photoresistor and a threshold knob (potentiometer). If it gets darker than your threshold, the alarm buzzes.</p>
+
+      <div class="grid two-col">
+        <div>
+          <div class="controls">
+            <div class="ctrl">
+              <label for="lightLevel">Room Light: <span id="lightLabel">70</span>%</label>
+              <input id="lightLevel" type="range" min="0" max="100" step="1" value="70" />
+            </div>
+            <div class="ctrl">
+              <label for="threshold">Threshold (knob): <span id="threshLabel">40</span>%</label>
+              <input id="threshold" type="range" min="0" max="100" step="1" value="40" />
+            </div>
+            <div class="ctrl">
+              <label for="volume">Buzzer Volume</label>
+              <input id="volume" type="range" min="0" max="1" step="0.01" value="0.25" />
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sensor-viz" id="sensorViz">
+            <div class="bulb" id="bulb"></div>
+            <div class="buzzer" id="buzzer">🔔</div>
+            <div class="sensor-led" id="sensorLed"></div>
+          </div>
+          <div class="readout" id="sensorReadout">
+            <div>Dark? <strong id="isDark">No</strong></div>
+            <div>Alarm: <strong id="alarmState">Off</strong></div>
+            <details>
+              <summary>What’s happening?</summary>
+              <p>Photoresistors change resistance with light. In a voltage divider, the output voltage depends on both resistances. Here we simplify to a % comparison to teach the logic before the math.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Mystery Fix -->
+    <section class="panel" id="mystery">
+      <h2>Mystery Fix</h2>
+      <p class="sub">A simple LED circuit is broken. Use the multimeter to probe two nodes and figure out what’s wrong. Then apply a fix.</p>
+
+      <div class="grid three-col">
+        <div>
+          <div class="node-list small">
+            <div class="node" data-mnode="M_BAT+">BAT +</div>
+            <div class="node" data-mnode="M_BAT-">BAT −</div>
+            <div class="node" data-mnode="M_LED_A">LED A</div>
+            <div class="node" data-mnode="M_LED_C">LED C</div>
+            <div class="node" data-mnode="M_SW_IN">SW IN</div>
+            <div class="node" data-mnode="M_SW_OUT">SW OUT</div>
+          </div>
+
+          <div class="meter">
+            <div class="probes">
+              <label>Probe A:</label>
+              <select id="probeA"></select>
+              <label>Probe B:</label>
+              <select id="probeB"></select>
+              <button id="measureBtn">Measure V</button>
+              <label class="cont-label"><input id="contMode" type="checkbox"> Continuity</label>
+            </div>
+            <div class="meter-readout">
+              Meter: <strong id="meterVal">0.00 V</strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mystery-status" id="mysteryStatus">
+            <div>Fault: <strong id="faultLabel">—</strong></div>
+            <div>LED: <strong id="mysteryLed">Off</strong></div>
+            <div>Switch: <strong id="mysterySwitch">Closed</strong></div>
+          </div>
+
+          <div class="actions">
+            <button id="toggleSwitch">Toggle Switch</button>
+            <button id="flipLed">Flip LED</button>
+            <button id="replaceBattery">Replace Battery</button>
+            <button id="repairWire">Repair Wire</button>
+            <button id="newFault">New Puzzle</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="readout">
+            <details open>
+              <summary>How to solve</summary>
+              <ul>
+                <li>Measure across the battery: you should see ~Vbatt.</li>
+                <li>Measure across the switch: 0 V when closed, ~Vbatt when open if current path exists.</li>
+                <li>Across the LED: ~Vf when forward biased; ~0 V if off and same potential; ~Vbatt if open elsewhere.</li>
+              </ul>
+            </details>
+            <div id="win" class="win hidden">🎉 Fixed! Try a new fault.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- TAB 4: Logic Lab -->
+    <section class="panel" id="logic">
+      <h2>Logic Lab</h2>
+      <p class="sub">Flip inputs A/B and see how different gates respond. Teen Mode shows truth tables.</p>
+      <div class="grid two-col">
+        <div class="logic-controls">
+          <label>Gate:
+            <select id="gate">
+              <option>AND</option>
+              <option>OR</option>
+              <option>NOT</option>
+              <option>NAND</option>
+              <option>NOR</option>
+              <option>XOR</option>
+            </select>
+          </label>
+          <div class="logic-inputs">
+            <label class="toggle">A <input id="inA" type="checkbox"></label>
+            <label class="toggle">B <input id="inB" type="checkbox"></label>
+          </div>
+          <div class="logic-output">
+            Output: <strong id="logicOut">0</strong>
+          </div>
+        </div>
+        <div class="logic-table adv hidden">
+          <table id="truthTable">
+            <thead><tr><th>A</th><th>B</th><th>Out</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="readout">
+            <details open><summary>Tip</summary>
+              <p>NOT ignores B. NAND/NOR flip the result of AND/OR. XOR is true when A and B differ.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PWM Playground -->
+    <section class="panel" id="pwm">
+      <h2>PWM Playground</h2>
+      <p class="sub">Pulse-width modulation: switch power on/off fast. Duty cycle controls average voltage and brightness.</p>
+      <div class="grid two-col">
+        <div>
+          <div class="controls">
+            <div class="ctrl">
+              <label for="duty">Duty Cycle: <span id="dutyLbl">50</span>%</label>
+              <input id="duty" type="range" min="0" max="100" step="1" value="50" />
+            </div>
+            <div class="ctrl">
+              <label for="freq">Frequency: <span id="freqLbl">500</span> Hz</label>
+              <input id="freq" type="range" min="50" max="2000" step="10" value="500" />
+            </div>
+            <div class="ctrl">
+              <label for="pwmVolume">Tone Volume</label>
+              <input id="pwmVolume" type="range" min="0" max="1" step="0.01" value="0.15" />
+            </div>
+          </div>
+          <div class="readout">
+            <div>V<sub>avg</sub> ≈ Duty × V<sub>batt</sub> = <strong id="vavg">0.00</strong> V</div>
+            <div>LED Brightness ~ Duty = <strong id="brightPct">50</strong>%</div>
+            <details><summary>What’s happening?</summary>
+              <p>PWM turns power on and off rapidly. The LED can’t respond to each tiny pulse, so it appears dimmer or brighter based on the average.</p>
+            </details>
+          </div>
+        </div>
+        <div>
+          <div class="pwm-viz">
+            <div class="pwm-led" id="pwmLed"></div>
+            <div class="pwm-wave">
+              <div class="pwm-high" id="pwmHigh"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: Challenges & Badges -->
+    <section class="panel" id="challenges">
+      <h2>Challenges & Badges</h2>
+      <p class="sub">Short missions that prove you understand the concepts. Earn badges and generate study notes.</p>
+      <div class="grid two-col">
+        <div class="challenge-list">
+          <ol id="challengeItems">
+            <li data-id="safeCurrent">Set LED current between 10–15 mA in Build & Blink. <span class="status" id="c_safeCurrent">❌</span></li>
+            <li data-id="sensorEdge">Tune the threshold within ±1% of light level in Sensor Lab. <span class="status" id="c_sensorEdge">❌</span></li>
+            <li data-id="mysteryFix">Fix a Mystery circuit. <span class="status" id="c_mysteryFix">❌</span></li>
+            <li data-id="pwm33">Set PWM duty to 33% ±1%. <span class="status" id="c_pwm33">❌</span></li>
+            <li data-id="xorTrue">In Logic Lab, make XOR output 1 with A≠B. <span class="status" id="c_xorTrue">❌</span></li>
+          </ol>
+          <button id="downloadNotes">Download Study Notes</button>
+        </div>
+        <div class="badges">
+          <div class="badge" id="b_led">💡 LED Tamer</div>
+          <div class="badge" id="b_sensor">👁️ Threshold Tuner</div>
+          <div class="badge" id="b_fix">🔧 Fault Finder</div>
+          <div class="badge" id="b_pwm">📶 PWM Pilot</div>
+          <div class="badge" id="b_logic">🧠 Logic Rookie</div>
+        </div>
+      </div>
+    </section>
+</main>
+
+  <footer class="site-footer">
+    <p>Built for learning by tinkering — safely.</p>
+  </footer>
 
   <script>
-(() => {
-  // ====== Utility ======
-  const DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const controls = document.getElementById('controls');
-  const instructions = document.getElementById('instructions');
+    // ---------- Tab logic ----------
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+    tabs.forEach(btn => btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    }));
 
-  function resize() {
-    const w = Math.min(window.innerWidth, 960);
-    const h = Math.min(window.innerHeight - 140, 540);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    canvas.width = Math.floor(w * DPR);
-    canvas.height = Math.floor(h * DPR);
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    draw();
-  }
-  window.addEventListener('resize', resize);
-
-  // ====== Types & Effectiveness ======
-  const Types = {
-    FLAME: 'Flame',
-    TIDE:  'Tide',
-    TERRA: 'Terra'
-  };
-
-  const effectiveness = {
-    // attacker->{defender: multiplier}
-    [Types.FLAME]: {[Types.TERRA]: 0.5, [Types.TIDE]: 0.5, [Types.FLAME]: 1},
-    [Types.TIDE]:  {[Types.FLAME]: 2,   [Types.TERRA]: 0.5, [Types.TIDE]: 1},
-    [Types.TERRA]: {[Types.TIDE]: 2,    [Types.FLAME]: 2,   [Types.TERRA]: 1},
-  };
-
-  function typeMultiplier(moveType, targetType) {
-    const row = effectiveness[moveType] || {};
-    return row[targetType] ?? 1;
-  }
-
-  // ====== Creatures (original mashups) ======
-  function creatureFactory(kind) {
-    switch (kind) {
-      case 'Ramhameleon': // ram + chameleon (Terra)
-        return {
-          name: 'Ramhameleon',
-          type: Types.TERRA,
-          maxHP: 120, hp: 120, atk: 18, def: 12, spd: 12,
-          palette: ['#5a7d3a','#2e4d1e','#c2d36b','#754c24'],
-          moves: [
-            {name:'Headbutt', type: Types.TERRA, power: 22, acc: 1.0},
-            {name:'Camouflage', type: Types.TERRA, power: 0,  acc: 1.0, buff:{def:+6}},
-            {name:'Dust Kick', type: Types.TERRA, power: 16, acc: 0.95},
-            {name:'Nature’s Grip', type: Types.TERRA, power: 26, acc: 0.85},
-          ],
-          draw(x, y, scale=1) {
-            // Simple stylized silhouette with horns and curled tail
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(scale, scale);
-            // body
-            ctx.fillStyle = this.palette[0];
-            roundedRect(-40, -20, 80, 40, 16);
-            ctx.fill();
-            // legs
-            ctx.fillStyle = this.palette[1];
-            for (let i=0;i<4;i++){
-              roundedRect(-30 + i*20, 20, 10, 22, 4); ctx.fill();
-            }
-            // head
-            ctx.fillStyle = this.palette[2];
-            roundedRect(30, -30, 28, 24, 8); ctx.fill();
-            // horn
-            ctx.fillStyle = this.palette[3];
-            ctx.beginPath();
-            ctx.moveTo(54, -28); ctx.quadraticCurveTo(70, -40, 60, -10); ctx.lineTo(54,-14); ctx.closePath();
-            ctx.fill();
-            // tail
-            ctx.beginPath();
-            ctx.moveTo(-40, 0); ctx.quadraticCurveTo(-60,-10,-55,10); ctx.quadraticCurveTo(-45,20,-38,12); ctx.fill();
-            // eye
-            ctx.fillStyle = '#000';
-            ctx.fillRect(48,-22,4,4);
-            ctx.restore();
-          }
-        };
-      case 'Sharkopup': // shark + cockapoo (Tide)
-        return {
-          name: 'Sharkopup',
-          type: Types.TIDE,
-          maxHP: 100, hp: 100, atk: 22, def: 10, spd: 16,
-          palette: ['#6bbbd5','#2b8aa6','#f0f7ff','#203a43'],
-          moves: [
-            {name:'Splash Snap', type: Types.TIDE, power: 20, acc: 0.95},
-            {name:'Howl', type: Types.TIDE, power: 0, acc:1.0, buff:{atk:+6}},
-            {name:'Whirlpool', type: Types.TIDE, power: 26, acc: 0.85},
-            {name:'Puppy Chomp', type: Types.TIDE, power: 18, acc: 0.98},
-          ],
-          draw(x, y, scale=1) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(scale, scale);
-            // body
-            ctx.fillStyle = this.palette[0];
-            ellipse(-10, 0, 60, 30);
-            // fin
-            ctx.fillStyle = this.palette[1];
-            triangle(10,-20, 30, -50, 50, -20);
-            // tail
-            triangle(-60,-10, -90, 0, -60, 10);
-            triangle(-60,-5, -80, -20, -55, -15);
-            // head (pup snout)
-            ctx.fillStyle = this.palette[2];
-            roundedRect(25,-10,30,18,6); ctx.fill();
-            // eye
-            ctx.fillStyle = this.palette[3];
-            ctx.beginPath(); ctx.arc(8,-5,3,0,Math.PI*2); ctx.fill();
-            ctx.restore();
-          }
-        };
-      case 'Beetlebison': // beetle + bison (Flame, lore: overheating thorax)
-      default:
-        return {
-          name: 'Beetlebison',
-          type: Types.FLAME,
-          maxHP: 110, hp: 110, atk: 20, def: 14, spd: 10,
-          palette: ['#7a1f1f','#d64545','#3b1b1b','#ffcc66'],
-          moves: [
-            {name:'Ember Horn', type: Types.FLAME, power: 20, acc: 0.95},
-            {name:'Overheat Vent', type: Types.FLAME, power: 26, acc: 0.85},
-            {name:'Carapace', type: Types.FLAME, power:0, acc:1.0, buff:{def:+6}},
-            {name:'Stampede', type: Types.FLAME, power:18, acc:0.98}
-          ],
-          draw(x, y, scale=1) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(scale, scale);
-            // body
-            ctx.fillStyle = this.palette[0];
-            ellipse(0, 0, 80, 40);
-            // back shell
-            ctx.fillStyle = this.palette[2];
-            ellipse(10, -5, 60, 24);
-            // head
-            ctx.fillStyle = this.palette[1];
-            roundedRect(30,-12,30,20,8); ctx.fill();
-            // horn
-            ctx.fillStyle = this.palette[3];
-            triangle(45,-12, 70,-22, 55, 6);
-            // legs
-            ctx.fillStyle = this.palette[2];
-            for (let i=0;i<4;i++){
-              roundedRect(-30 + i*20, 18, 12, 20, 4); ctx.fill();
-            }
-            // eye
-            ctx.fillStyle = '#000';
-            ctx.fillRect(52,-6,4,4);
-            ctx.restore();
-          }
-        };
+    // ---------- Populate node dropdowns ----------
+    function populateSelects(selects, nodes) {
+      selects.forEach(sel => {
+        sel.innerHTML = '';
+        nodes.forEach(n => {
+          const o = document.createElement('option');
+          o.value = n;
+          o.textContent = n;
+          sel.appendChild(o);
+        });
+      });
     }
-  }
 
-  // ====== Moves, Damage, RNG ======
-  const rng = {
-    seed: Date.now() % 2147483647,
-    next() {
-      // Park-Miller minimal standard
-      this.seed = (this.seed * 48271) % 2147483647;
-      return this.seed / 2147483647;
-    },
-    chance(p) { return this.next() < p; }
-  };
+    // Tab 1 nodes
+    const builderNodes = ['BAT+','BAT-','SW_OUT','R_OUT','LED_A','LED_C'];
+    document.querySelectorAll('#builder .wire .endA, #builder .wire .endB')
+      .forEach(sel => populateSelects([sel], builderNodes));
 
-  function calcDamage(attacker, defender, move) {
-    if (move.power <= 0) return 0;
-    const base = move.power + Math.max(1, attacker.atk - Math.floor(defender.def * 0.6));
-    const stab = (move.type === attacker.type) ? 1.2 : 1.0; // Same-Type bonus
-    const multi = typeMultiplier(move.type, defender.type);
-    const variance = 0.9 + rng.next() * 0.2;
-    return Math.max(1, Math.floor(base * stab * multi * variance));
-  }
+    // Tab 3 nodes (mystery)
+    const mNodes = ['M_BAT+','M_BAT-','M_LED_A','M_LED_C','M_SW_IN','M_SW_OUT'];
+    populateSelects([document.getElementById('probeA'), document.getElementById('probeB')], mNodes);
 
-  // ====== Game State ======
-  const player = {
-    creature: creatureFactory('Ramhameleon'),
-    x: 140, y: 290, facing: 1
-  };
-  const enemy = {
-    creature: creatureFactory(rng.next() > 0.5 ? 'Sharkopup' : 'Beetlebison'),
-    x: 520, y: 140, facing: -1
-  };
+    // ---------- Builder Simulation ----------
+    const batteryV = document.getElementById('batteryV');
+    const batteryVLabel = document.getElementById('batteryVLabel');
+    const resistance = document.getElementById('resistance');
+    const resLabel = document.getElementById('resLabel');
+    const switchClosed = document.getElementById('switchClosed');
+    const ledVf = document.getElementById('ledVf');
+    const vfLabel = document.getElementById('vfLabel');
 
-  let log = ['A wild ' + enemy.creature.name + ' appears!'];
-  let playerTurn = true;
-  let gameOver = false;
-  let animTick = 0;
+    const currentEl = document.getElementById('current');
+    const powerEl = document.getElementById('power');
+    const statusEl = document.getElementById('status');
+    const ammeter = document.getElementById('ammeter');
+    const ledViz = document.getElementById('ledViz');
 
-  // ====== UI: Move Buttons ======
-  function updateControls() {
-    controls.innerHTML = '';
-    const c = player.creature;
-    c.moves.forEach((m, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'move';
-      btn.innerHTML = `<div class="m-name">${m.name}</div><div class="m-type">${m.type}</div>`;
-      btn.disabled = !playerTurn || gameOver;
-      btn.addEventListener('click', () => doPlayerMove(i));
-      controls.appendChild(btn);
+    function getWires() {
+      const pairs = [];
+      document.querySelectorAll('#builder .wire').forEach(w => {
+        const a = w.querySelector('.endA').value;
+        const b = w.querySelector('.endB').value;
+        if (a && b && a !== b) pairs.push([a,b]);
+      });
+      return pairs;
+    }
+
+    function inSameNode(a, b, pairs) {
+      // Build connectivity groups
+      const nodes = new Set(builderNodes);
+      const parent = {};
+      builderNodes.forEach(n => parent[n] = n);
+
+      function find(x){ while(parent[x] !== x) x = parent[x]; return x; }
+      function union(x,y){ x=find(x); y=find(y); if (x!==y) parent[y]=x; }
+
+      pairs.forEach(([x,y]) => union(x,y));
+      return find(a) === find(b);
+    }
+
+    function hasSeriesPath(pairs) {
+      // We want BAT+ -> (switch closed path) -> R_OUT -> LED_A -> LED_C -> BAT-
+      // Simplify: require that all nodes are connected into one component AND switch is closed
+      if (!switchClosed.checked) return false;
+      return inSameNode('BAT+','R_OUT',pairs) && inSameNode('R_OUT','LED_A',pairs)
+             && inSameNode('LED_A','LED_C',pairs) && inSameNode('LED_C','BAT-',pairs);
+    }
+
+    function updateBuilder() {
+      batteryVLabel.textContent = (+batteryV.value).toFixed(1);
+      resLabel.textContent = resistance.value;
+      vfLabel.textContent = (+ledVf.value).toFixed(1);
+
+      const pairs = getWires();
+      const loopOK = hasSeriesPath(pairs);
+
+      let status = 'Open circuit';
+      let I = 0; // amps
+      let P = 0;
+
+      if (loopOK) {
+        const Vb = +batteryV.value;
+        const Vf = +ledVf.value;
+        const R = +resistance.value;
+        if (Vb > Vf) {
+          I = (Vb - Vf) / R; // A
+          P = I*I*R + I*Vf;  // resistor + LED power approx
+          status = 'Loop complete';
+        } else {
+          status = 'Battery too low for LED forward bias';
+        }
+      }
+
+      // UI
+      const mA = I * 1000;
+      currentEl.textContent = mA.toFixed(2);
+      powerEl.textContent = (P*1000).toFixed(2);
+
+      // Ammeter needle: 0 to 30 mA range
+      const angle = Math.max(0, Math.min(180, (mA/30)*180));
+      ammeter.style.transform = `rotate(${angle}deg)`;
+
+      // LED viz
+      const brightness = Math.max(0, Math.min(1, mA / 20)); // brighten near 20 mA
+      ledViz.style.opacity = String(0.2 + 0.8*brightness);
+
+      // Status color
+      if (mA > 25) {
+        status += ' — ⚠️ Too much current! Use a larger resistor.';
+        statusEl.parentElement.classList.add('warn');
+      } else {
+        statusEl.parentElement.classList.remove('warn');
+      }
+      statusEl.textContent = status;
+    }
+
+    ['input','change'].forEach(evt => {
+      batteryV.addEventListener(evt, updateBuilder);
+      resistance.addEventListener(evt, updateBuilder);
+      switchClosed.addEventListener(evt, updateBuilder);
+      ledVf.addEventListener(evt, updateBuilder);
+      document.querySelectorAll('#builder .wire select').forEach(s => s.addEventListener(evt, updateBuilder));
     });
-  }
+    updateBuilder();
 
-  // ====== Turn Handling ======
-  function doPlayerMove(i) {
-    if (!playerTurn || gameOver) return;
-    const move = player.creature.moves[i];
-    executeMove(player.creature, enemy.creature, move, 'You');
-  }
+    // ---------- Sensor Lab ----------
+    const lightLevel = document.getElementById('lightLevel');
+    const threshold = document.getElementById('threshold');
+    const lightLabel = document.getElementById('lightLabel');
+    const threshLabel = document.getElementById('threshLabel');
+    const volume = document.getElementById('volume');
+    const isDark = document.getElementById('isDark');
+    const alarmState = document.getElementById('alarmState');
+    const bulb = document.getElementById('bulb');
+    const sensorLed = document.getElementById('sensorLed');
 
-  function enemyChooseMove() {
-    const ms = enemy.creature.moves;
-    // Simple AI: prefer damaging moves and type advantage
-    let best = 0, bestScore = -1;
-    for (let i=0;i<ms.length;i++) {
-      const m = ms[i];
-      const base = (m.power || 0);
-      const multi = typeMultiplier(m.type, player.creature.type);
-      const score = (base ? base * multi : 5) + rng.next() * 4;
-      if (score > bestScore) {bestScore = score; best = i;}
+    let audioCtx, osc, gain;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        osc = audioCtx.createOscillator();
+        gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 600;
+        gain.gain.value = 0;
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start();
+      }
     }
-    return ms[best];
-  }
 
-  function executeMove(attacker, defender, move, whoLabel) {
-    if (move.buff) {
-      // Apply buff
-      if (move.buff.atk) attacker.atk += move.buff.atk;
-      if (move.buff.def) attacker.def += move.buff.def;
-      pushLog(`${whoLabel} used ${move.name}! ${move.buff.atk? 'ATK rose! ': ''}${move.buff.def? 'DEF rose!':''}`.trim());
-      endPhase();
-      return;
+    function updateSensor() {
+      lightLabel.textContent = lightLevel.value;
+      threshLabel.textContent = threshold.value;
+
+      const dark = (+lightLevel.value) < (+threshold.value);
+      isDark.textContent = dark ? 'Yes' : 'No';
+      alarmState.textContent = dark ? 'On' : 'Off';
+
+      // visuals
+      bulb.style.opacity = String(+lightLevel.value/100);
+      sensorLed.style.opacity = dark ? '1' : '0.2';
+
+      // audio
+      ensureAudio();
+      gain.gain.linearRampToValueAtTime(dark ? +volume.value : 0, audioCtx.currentTime + 0.05);
     }
-    // Accuracy check
-    if (!rng.chance(move.acc ?? 1)) {
-      pushLog(`${whoLabel} used ${move.name}… but it missed!`);
-      endPhase();
-      return;
+
+    ['input','change'].forEach(evt => {
+      lightLevel.addEventListener(evt, updateSensor);
+      threshold.addEventListener(evt, updateSensor);
+      volume.addEventListener(evt, updateSensor);
+    });
+    updateSensor();
+
+    // ---------- Mystery Fix ----------
+    const faultLabel = document.getElementById('faultLabel');
+    const mysteryLed = document.getElementById('mysteryLed');
+    const mysterySwitch = document.getElementById('mysterySwitch');
+    const meterVal = document.getElementById('meterVal');
+    const newFaultBtn = document.getElementById('newFault');
+    const toggleSwitchBtn = document.getElementById('toggleSwitch');
+    const flipLedBtn = document.getElementById('flipLed');
+    const replaceBatteryBtn = document.getElementById('replaceBattery');
+    const repairWireBtn = document.getElementById('repairWire');
+    const winEl = document.getElementById('win');
+
+    let M = {
+      Vb: 3.0,
+      switchClosed: true,
+      ledForward: true,
+      openWire: false,
+      deadBattery: false,
+      Vf: 2.0
+    };
+
+    function randomFault() {
+      M = {
+        Vb: 3.0,
+        switchClosed: Math.random() > 0.5,
+        ledForward: Math.random() > 0.5,
+        openWire: Math.random() > 0.5,
+        deadBattery: Math.random() > 0.7,
+        Vf: 2.0 + Math.round(Math.random()*6)/10  // 2.0–2.6 V
+      };
+      winEl.classList.add('hidden');
+      renderMystery();
     }
-    const dmg = calcDamage(attacker, defender, move);
-    defender.hp = Math.max(0, defender.hp - dmg);
-    const multi = typeMultiplier(move.type, defender.type);
-    const extra = multi > 1 ? ' It\'s super effective!' : (multi < 1 ? ' It\'s not very effective…' : '');
-    pushLog(`${whoLabel} used ${move.name}! ${dmg} damage.${extra}`);
-    if (defender.hp <= 0) {
-      gameOver = true;
-      pushLog(`${whoLabel === 'You' ? 'Enemy ' + defender.name : 'You'} fainted!`);
-      instructions.textContent = 'Tap "Restart" below to play again.';
+
+    function renderMystery() {
+      // Determine LED state
+      let Vb = M.deadBattery ? 0 : M.Vb;
+      let flows = Vb > M.Vf && M.switchClosed && M.ledForward && !M.openWire;
+      const ledOn = flows;
+
+      // Update labels
+      faultLabel.textContent = 'Unknown (use the meter)';
+      mysteryLed.textContent = ledOn ? 'On' : 'Off';
+      mysterySwitch.textContent = M.switchClosed ? 'Closed' : 'Open';
+
+      // Win check: if all good and LED on
+      if (!M.deadBattery && M.switchClosed && M.ledForward && !M.openWire && (Vb > M.Vf)) {
+        faultLabel.textContent = 'Fixed';
+        winEl.classList.remove('hidden');
+      } else {
+        winEl.classList.add('hidden');
+      }
     }
-    endPhase();
-  }
 
-  function endPhase() {
-    playerTurn = !playerTurn;
-    updateControls();
-    if (!playerTurn && !gameOver) {
-      // Enemy acts after a short delay
-      setTimeout(() => {
-        const mv = enemyChooseMove();
-        executeMove(enemy.creature, player.creature, mv, enemy.creature.name);
-      }, 500);
+    function measure(a, b) {
+      // Minimal node model, treat LED like a drop if forward and current could flow
+      const Vb = M.deadBattery ? 0 : M.Vb;
+      const potentials = {
+        'M_BAT+': Vb,
+        'M_BAT-': 0,
+        'M_SW_IN': Vb,
+        'M_SW_OUT': M.switchClosed ? Vb : (M.openWire ? NaN : 0), // open wire may break reference
+        'M_LED_A': M.switchClosed ? Vb : (M.openWire ? NaN : 0),
+        'M_LED_C': (M.switchClosed && M.ledForward) ? Math.max(0, Vb - M.Vf) : 0
+      };
+
+      const Va = potentials[a];
+      const Vb_ = potentials[b];
+
+      if (Number.isNaN(Va) || Number.isNaN(Vb_)) return '—';
+      const dv = (Va - Vb_);
+      return (Math.round(dv * 100) / 100).toFixed(2) + ' V';
     }
-    draw();
-  }
 
-  function pushLog(t) {
-    log.push(t);
-    if (log.length > 6) log.shift();
-    draw();
-  }
+    document.getElementById('measureBtn').addEventListener('click', () => {
+      const a = document.getElementById('probeA').value;
+      const b = document.getElementById('probeB').value;
+      meterVal.textContent = measure(a, b);
+    });
 
-  // ====== Drawing Helpers ======
-  function roundedRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x+r, y);
-    ctx.arcTo(x+w, y,   x+w, y+h, r);
-    ctx.arcTo(x+w, y+h, x,   y+h, r);
-    ctx.arcTo(x,   y+h, x,   y,   r);
-    ctx.arcTo(x,   y,   x+w, y,   r);
-    ctx.closePath();
-  }
-  function ellipse(cx, cy, w, h) {
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, w/2, h/2, 0, 0, Math.PI*2);
-    ctx.fill();
-  }
-  function triangle(x1,y1,x2,y2,x3,y3){
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fill();
-  }
+    toggleSwitchBtn.addEventListener('click', () => { M.switchClosed = !M.switchClosed; renderMystery(); });
+    flipLedBtn.addEventListener('click', () => { M.ledForward = !M.ledForward; renderMystery(); });
+    replaceBatteryBtn.addEventListener('click', () => { M.deadBattery = false; M.Vb = 3.0; renderMystery(); });
+    repairWireBtn.addEventListener('click', () => { M.openWire = false; renderMystery(); });
+    newFaultBtn.addEventListener('click', randomFault);
 
-  function drawHPBar(x,y,w,h, hp, maxHP, label){
-    // back
-    ctx.fillStyle = '#222'; roundedRect(x,y,w,h,6); ctx.fill();
-    // hp
-    const pct = Math.max(0, hp/maxHP);
-    ctx.fillStyle = pct > 0.5 ? '#4caf50' : (pct > 0.2 ? '#ff9800' : '#f44336');
-    roundedRect(x+2,y+2,(w-4)*pct,h-4,5); ctx.fill();
-    // text
-    ctx.fillStyle = '#fff'; ctx.font = '12px system-ui, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(`${label} ${Math.max(0, Math.floor(hp))}/${maxHP}`, x + w/2, y + h/2);
-  }
-
-  // ====== Restart Control ======
-  const restartBtn = document.createElement('button');
-  restartBtn.className = 'restart';
-  restartBtn.textContent = 'Restart';
-  restartBtn.addEventListener('click', () => {
-    Object.assign(player.creature, creatureFactory('Ramhameleon'));
-    Object.assign(enemy.creature, creatureFactory(rng.next()>0.5?'Sharkopup':'Beetlebison'));
-    log = ['A wild ' + enemy.creature.name + ' appears!'];
-    playerTurn = true; gameOver = false;
-    instructions.textContent = 'Tap a move. Win by dropping the enemy HP to zero.';
-    updateControls(); draw();
-  });
-  controls.appendChild(restartBtn);
-
-  // ====== Main Draw ======
-  function draw() {
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // background
-    const g = ctx.createLinearGradient(0,0,0,h);
-    g.addColorStop(0, '#87cefa'); // sky
-    g.addColorStop(1, '#b6e3a8'); // grass
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,w,h);
-
-    // simple stage ovals
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ellipse(160, h-80, 180, 40);
-    ellipse(w-160, h-220, 200, 50);
-
-    // enemy
-    enemy.creature.draw(w-220, 150, 1.2);
-
-    // player
-    player.creature.draw(200, h-120, 1.2);
-
-    // UI boxes
-    drawHPBar(40, 24, 280, 24, enemy.creature.hp, enemy.creature.maxHP, enemy.creature.name);
-    drawHPBar(w-320, h-90, 280, 24, player.creature.hp, player.creature.maxHP, player.creature.name);
-
-    // log box
-    const logH = 90;
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    roundedRect(20, h - logH - 120, w-40, logH, 10); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = '14px system-ui, sans-serif';
-    ctx.textAlign = 'left'; ctx.textBaseline='top';
-    for (let i=0;i<log.length;i++){
-      ctx.fillText(log[i], 30, h - logH - 110 + i*16);
-    }
-  }
-
-  // init
-  updateControls();
-  resize();
-  pushLog('You send out ' + player.creature.name + '!');
-  draw();
-})();
+    randomFault();
   </script>
+
+  <script>
+    // ---- Teen Mode + XP + Continuity Beep ----
+    const teenMode = document.getElementById('teenMode');
+    const advBlocks = document.querySelectorAll('.adv');
+    const xpVal = document.getElementById('xpVal');
+    let XP = 0;
+    function addXP(n){ XP += n; xpVal.textContent = XP; }
+
+    teenMode?.addEventListener('change', () => {
+      advBlocks.forEach(el => el.classList.toggle('hidden', !teenMode.checked));
+    });
+
+    // Award XP when: good LED current achieved (5-20mA) for the first time
+    let goodCurrentAwarded = false;
+    const origUpdateBuilder = updateBuilder;
+    updateBuilder = function() {
+      origUpdateBuilder();
+      const mA = parseFloat(document.getElementById('current').textContent);
+      if (!goodCurrentAwarded && mA >= 5 && mA <= 20) {
+        addXP(10);
+        goodCurrentAwarded = true;
+      }
+      // Fill advanced readouts
+      const Vb = +batteryV.value, Vf = +ledVf.value, R = +resistance.value;
+      let I = 0, vR = 0, vLED = 0, pR = 0;
+      if (switchClosed.checked && (Vb > Vf)) {
+        I = (Vb - Vf) / R;
+        vR = I * R;
+        vLED = Vf;
+        pR = I*I*R;
+      }
+      const vREl = document.getElementById('vR');
+      const vLEDEl = document.getElementById('vLED');
+      const pREl = document.getElementById('pR');
+      if (vREl && vLEDEl && pREl) {
+        vREl.textContent = vR.toFixed(2);
+        vLEDEl.textContent = vLED.toFixed(2);
+        pREl.textContent = (pR*1000).toFixed(2);
+      }
+    };
+
+    // Continuity beeper for Mystery meter
+    const contMode = document.getElementById('contMode');
+    let beepCtx, beepOsc, beepGain;
+    function ensureBeep() {
+      if (!beepCtx) {
+        beepCtx = new (window.AudioContext || window.webkitAudioContext)();
+        beepOsc = beepCtx.createOscillator();
+        beepGain = beepCtx.createGain();
+        beepOsc.type = 'sine';
+        beepOsc.frequency.value = 1200;
+        beepGain.gain.value = 0;
+        beepOsc.connect(beepGain).connect(beepCtx.destination);
+        beepOsc.start();
+      }
+    }
+    const origMeasure = document.getElementById('measureBtn').onclick;
+    document.getElementById('measureBtn').onclick = null;
+    document.getElementById('measureBtn').addEventListener('click', () => {
+      // Run original measure handler by dispatching click to original listener if needed
+      const a = document.getElementById('probeA').value;
+      const b = document.getElementById('probeB').value;
+      const Vbefore = document.getElementById('meterVal').textContent;
+      // Trigger existing logic
+      const evt = new Event('click');
+      // call the existing measure function directly (we have access to it in scope)
+      const val = (function(){
+        const Vb = M.deadBattery ? 0 : M.Vb;
+        const potentials = {
+          'M_BAT+': Vb,
+          'M_BAT-': 0,
+          'M_SW_IN': Vb,
+          'M_SW_OUT': M.switchClosed ? Vb : (M.openWire ? NaN : 0),
+          'M_LED_A': M.switchClosed ? Vb : (M.openWire ? NaN : 0),
+          'M_LED_C': (M.switchClosed && M.ledForward) ? Math.max(0, Vb - M.Vf) : 0
+        };
+        const Va = potentials[a], Vb_ = potentials[b];
+        if (Number.isNaN(Va) || Number.isNaN(Vb_)) return '—';
+        const dv = (Va - Vb_);
+        return (Math.round(dv * 100) / 100).toFixed(2) + ' V';
+      })();
+      document.getElementById('meterVal').textContent = val;
+
+      if (contMode && contMode.checked) {
+        ensureBeep();
+        const numeric = parseFloat(String(val).replace(' V',''));
+        const closeToZero = !isNaN(numeric) && Math.abs(numeric) < 0.2;
+        beepGain.gain.linearRampToValueAtTime(closeToZero ? 0.25 : 0, (beepCtx?.currentTime || 0) + 0.02);
+      }
+    });
+
+    // Award XP when a Mystery is fixed
+    const origRender = renderMystery;
+    renderMystery = function(){
+      origRender();
+      if (faultLabel.textContent === 'Fixed' && !renderMystery._awarded) {
+        addXP(20);
+        renderMystery._awarded = true;
+      }
+    };
+
+    // Award XP for Sensor Lab when threshold is tuned right at the edge
+    let tunedAward = false;
+    const origUpdateSensor = updateSensor;
+    updateSensor = function(){
+      origUpdateSensor();
+      const L = +lightLevel.value, T = +threshold.value;
+      if (!tunedAward && Math.abs(L - T) <= 1) {
+        addXP(5);
+        tunedAward = true;
+      }
+    };
+  </script>
+
+
+  <script>
+    // ===== Logic Lab =====
+    const gateSel = document.getElementById('gate');
+    const inA = document.getElementById('inA');
+    const inB = document.getElementById('inB');
+    const logicOut = document.getElementById('logicOut');
+    const tBody = document.querySelector('#truthTable tbody');
+
+    function logicEval(g, a, b){
+      a = !!a; b = !!b;
+      switch(g){
+        case 'AND': return a && b;
+        case 'OR': return a || b;
+        case 'NOT': return !a;
+        case 'NAND': return !(a && b);
+        case 'NOR': return !(a || b);
+        case 'XOR': return (a ^ b) === 1;
+      }
+      return false;
+    }
+    function buildTruthTable(){
+      if (!tBody) return;
+      tBody.innerHTML = '';
+      const g = gateSel.value;
+      const rows = g === 'NOT' ? [[0,0],[1,0]] : [[0,0],[0,1],[1,0],[1,1]];
+      rows.forEach(([A,B]) => {
+        const tr = document.createElement('tr');
+        const out = logicEval(g, A, B) ? 1 : 0;
+        tr.innerHTML = `<td>${A}</td><td>${B}</td><td>${out}</td>`;
+        tBody.appendChild(tr);
+      });
+    }
+    function updateLogic(){
+      const g = gateSel.value;
+      const out = logicEval(g, inA.checked, inB.checked) ? 1 : 0;
+      logicOut.textContent = out;
+      // Challenge: XOR true when A != B
+      if (g === 'XOR' && out === 1) awardChallenge('xorTrue', '🧠 Logic Rookie', 'b_logic');
+    }
+    ['change','input'].forEach(ev => {
+      gateSel?.addEventListener(ev, () => { buildTruthTable(); updateLogic(); });
+      inA?.addEventListener(ev, updateLogic);
+      inB?.addEventListener(ev, updateLogic);
+    });
+    buildTruthTable(); updateLogic();
+
+    // ===== PWM Playground =====
+    const duty = document.getElementById('duty');
+    const freq = document.getElementById('freq');
+    const dutyLbl = document.getElementById('dutyLbl');
+    const freqLbl = document.getElementById('freqLbl');
+    const vavg = document.getElementById('vavg');
+    const brightPct = document.getElementById('brightPct');
+    const pwmLed = document.getElementById('pwmLed');
+    const pwmHigh = document.getElementById('pwmHigh');
+    const pwmVolume = document.getElementById('pwmVolume');
+
+    let pwmCtx, pwmOsc, pwmGain;
+    function ensurePWM(){
+      if (!pwmCtx) {
+        pwmCtx = new (window.AudioContext || window.webkitAudioContext)();
+        pwmOsc = pwmCtx.createOscillator();
+        pwmGain = pwmCtx.createGain();
+        pwmOsc.type = 'square';
+        pwmOsc.frequency.value = +freq.value;
+        pwmGain.gain.value = 0;
+        pwmOsc.connect(pwmGain).connect(pwmCtx.destination);
+        pwmOsc.start();
+      }
+    }
+    function updatePWM(){
+      dutyLbl.textContent = duty.value;
+      freqLbl.textContent = freq.value;
+
+      const d = +duty.value / 100;
+      const Vb = +document.getElementById('batteryV').value;
+      const val = (d * Vb);
+      vavg.textContent = val.toFixed(2);
+      brightPct.textContent = Math.round(d*100);
+      pwmHigh.style.width = (d*100) + '%';
+      pwmLed.style.opacity = String(0.2 + 0.8*d);
+
+      ensurePWM();
+      pwmOsc.frequency.value = +freq.value;
+      pwmGain.gain.linearRampToValueAtTime(+pwmVolume.value * d, pwmCtx.currentTime + 0.03);
+
+      // Challenge: duty near 33%
+      if (Math.abs((d*100) - 33) <= 1) {
+        awardChallenge('pwm33', '📶 PWM Pilot', 'b_pwm');
+      }
+    }
+    ['input','change'].forEach(ev => {
+      duty?.addEventListener(ev, updatePWM);
+      freq?.addEventListener(ev, updatePWM);
+      pwmVolume?.addEventListener(ev, updatePWM);
+    });
+    updatePWM();
+
+    // ===== Challenges & Badges =====
+    const badgesStrip = document.getElementById('badgesStrip');
+    function awardBadge(label, badgeId){
+      const badge = document.getElementById(badgeId);
+      if (badge && !badge.classList.contains('earned')) {
+        badge.classList.add('earned');
+        const mini = document.createElement('div');
+        mini.className = 'mini-badge';
+        mini.textContent = badge.textContent;
+        badgesStrip?.appendChild(mini);
+        addXP(10);
+      }
+    }
+    function mark(id, ok){
+      const el = document.getElementById('c_'+id);
+      if (el) el.textContent = ok ? '✅' : '❌';
+    }
+    function awardChallenge(id, badgeLabel, badgeElemId){
+      if (!awardChallenge._done) awardChallenge._done = {};
+      if (awardChallenge._done[id]) return;
+      awardChallenge._done[id] = true;
+      mark(id, true);
+      switch(id){
+        case 'safeCurrent':
+          awardBadge('LED Tamer', 'b_led'); break;
+        case 'sensorEdge':
+          awardBadge('Threshold Tuner', 'b_sensor'); break;
+        case 'mysteryFix':
+          awardBadge('Fault Finder', 'b_fix'); break;
+        case 'pwm33':
+          awardBadge('PWM Pilot', 'b_pwm'); break;
+        case 'xorTrue':
+          awardBadge('Logic Rookie', 'b_logic'); break;
+      }
+      addXP(25);
+    }
+
+    // Hook into existing events to award challenge completions
+    // Safe current: override updateBuilder wrapper again to check 10–15mA
+    const wasUpdateBuilder = updateBuilder;
+    updateBuilder = function(){
+      wasUpdateBuilder();
+      const mA = parseFloat(document.getElementById('current').textContent);
+      if (mA >= 10 && mA <= 15) awardChallenge('safeCurrent', '💡 LED Tamer', 'b_led');
+    };
+
+    // Sensor edge: already implemented tunedAward when |L - T| <= 1 — hook it
+    const oldUpdateSensor2 = updateSensor;
+    updateSensor = function(){
+      oldUpdateSensor2();
+      const L = +lightLevel.value, T = +threshold.value;
+      if (Math.abs(L - T) <= 1) awardChallenge('sensorEdge', '👁️ Threshold Tuner', 'b_sensor');
+    };
+
+    // Mystery fix: hook existing renderMystery
+    const oldRender2 = renderMystery;
+    renderMystery = function(){
+      oldRender2();
+      if (faultLabel.textContent === 'Fixed') awardChallenge('mysteryFix', '🔧 Fault Finder', 'b_fix');
+    };
+
+    // Study Notes generator
+    document.getElementById('downloadNotes')?.addEventListener('click', () => {
+      const lines = [];
+      lines.push('ElectroPlayground Study Notes');
+      lines.push('');
+      lines.push('Battery Voltage: ' + document.getElementById('batteryV').value + ' V');
+      lines.push('Resistor setting: ' + document.getElementById('resistance').value + ' Ω');
+      lines.push('LED Vf: ' + document.getElementById('ledVf').value + ' V');
+      lines.push('Current (series): ' + document.getElementById('current').textContent + ' mA');
+      lines.push('PWM Duty: ' + document.getElementById('duty').value + ' %, Frequency: ' + document.getElementById('freq').value + ' Hz');
+      lines.push('Logic Gate: ' + gateSel.value + ', A=' + (inA.checked?1:0) + ', B=' + (inB.checked?1:0) + ', Out=' + logicOut.textContent);
+      lines.push('');
+      lines.push('Achievements:');
+      ['safeCurrent','sensorEdge','mysteryFix','pwm33','xorTrue'].forEach(id => {
+        const ok = (document.getElementById('c_'+id)?.textContent === '✅');
+        lines.push('- ' + id + ': ' + (ok ? 'Completed' : '—'));
+      });
+      const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ElectroPlayground_Notes.txt';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  </script>
+
 </body>
 </html>
